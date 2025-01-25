@@ -26,7 +26,7 @@ const schema = buildSchema(`
 
     type Mutation {
         createBaby(name: String!, dateOfBirth: String!, gender: String!): Baby!
-        deleteBaby(id: Int!): Int!
+        deleteBaby(id: Int!): Int
     }
 
     type Query {
@@ -80,11 +80,11 @@ const root = {
         
         return identifier
 
-        await prisma.baby.delete({
-            where: {
-                id: identifier
-            }
-        })
+        // await prisma.baby.delete({
+        //     where: {
+        //         id: identifier
+        //     }
+        // })
     }
 }
 
