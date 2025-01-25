@@ -20,6 +20,10 @@ const schema = buildSchema(`
         email: String
     }
 
+    type Mutation {
+        createBaby(name: String!, dateOfBirth: String!, gender: String!): Baby!
+    }
+
     type Query {
         babies: [Baby]
         users: [User]
@@ -52,6 +56,23 @@ const root = {
             // await redis.methods.store("users", users)
             return users
         }
+    },
+    async createBaby(name, dateOfBirth, gender) {
+
+        const babies = await prisma.baby.findMany()
+
+        const newBaby = {
+            id: babies.length,
+            name: name,
+            date: dateOfBirth,
+            gender: gender
+        }
+
+        await prisma.baby.create({
+            newBaby
+        })
+
+        return newBaby
     }
 }
 
