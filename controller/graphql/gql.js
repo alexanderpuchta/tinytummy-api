@@ -57,7 +57,7 @@ const root = {
             return users
         }
     },
-    async createBaby(name, dateOfBirth, gender) {
+    createBaby: async ({ name, dateOfBirth, gender }) => {
 
         const babies = await prisma.baby.findMany()
 
