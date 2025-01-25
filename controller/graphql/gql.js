@@ -76,16 +76,15 @@ const root = {
 
         return newBaby
     },
-    deleteBaby: async ({ identifier }) => {
-        
-        const response = `got: ${identifier}`
-        return response
+    deleteBaby: async ({ id }) => {
 
-        // await prisma.baby.delete({
-        //     where: {
-        //         id: identifier
-        //     }
-        // })
+        await prisma.baby.delete({
+            where: {
+                id: id
+            }
+        })
+
+        return `${id}`
     }
 }
 
