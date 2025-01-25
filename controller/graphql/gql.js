@@ -64,17 +64,19 @@ const root = {
     },
     createBaby: async ({ name, dateOfBirth, gender }) => {
 
-        const newBaby = {
-            name: name,
-            birth: dateOfBirth,
-            gender: gender
-        }
-
         await prisma.baby.create({
-            data: newBaby
+            data: {
+                name: name,
+                gender: gender,
+                birth: dateOfBirth
+            }
         })
 
-        return newBaby
+        return await prisma.baby.findFirst({
+            where: {
+                name: name
+            }
+        })
     },
     deleteBaby: async ({ id }) => {
 
