@@ -10,7 +10,13 @@ app.all(
     gql.handler
 )
 
-app.get("/", (_req, res) => {
+app.get("/", (req, res) => {
+    res.json({
+        "msg": "hello"
+    })
+})
+
+app.get("/graphql-io", (_req, res) => {
     res.type("html")
     res.end(gql.ide)
 })
