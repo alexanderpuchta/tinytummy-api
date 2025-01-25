@@ -77,10 +77,10 @@ const root = {
 
         return newBaby
     },
-    deleteBaby: async ({ id }) => {
+    deleteBaby: async ({ identifier }) => {
         await prisma.baby.delete({
             where: {
-                id: id
+                id: identifier
             }
         })
     }
