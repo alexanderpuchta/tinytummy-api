@@ -6,6 +6,10 @@ const prisma = require("../db/prisma")
 // const redis = require("../cache/redis")
 
 const schema = buildSchema(`
+    enum Status {
+       okay
+    }
+    
     type Baby {
         id: Int
         name: String
@@ -22,7 +26,7 @@ const schema = buildSchema(`
 
     type Mutation {
         createBaby(name: String!, dateOfBirth: String!, gender: String!): Baby!
-        deleteBaby(id: Int!)
+        deleteBaby(id: Int!): Status!
     }
 
     type Query {
@@ -76,11 +80,14 @@ const root = {
         return newBaby
     },
     deleteBaby: async ({ identifier }) => {
+        
         await prisma.baby.delete({
             where: {
                 id: identifier
             }
         })
+
+        return "okay"
     }
 }
 
