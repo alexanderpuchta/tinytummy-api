@@ -12,7 +12,7 @@ app.all(
 
 app.get("/", (req, res) => {
     res.json({
-        "msg": "hello"
+        "status": "OK"
     })
 })
 
