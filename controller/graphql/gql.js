@@ -64,7 +64,7 @@ const root = {
         const newBaby = {
             id: babies.length,
             name: name,
-            date: dateOfBirth,
+            birth: dateOfBirth,
             gender: gender
         }
 
