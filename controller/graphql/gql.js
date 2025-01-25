@@ -69,7 +69,7 @@ const root = {
         }
 
         await prisma.baby.create({
-            newBaby
+            data: newBaby
         })
 
         return newBaby
