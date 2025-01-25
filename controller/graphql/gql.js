@@ -21,10 +21,13 @@ const schema = buildSchema(`
     }
 
     type Mutation {
+
         createBaby(name: String!, dateOfBirth: String!, gender: String!): Baby!
+        deleteBaby(id: Int!)
     }
 
     type Query {
+
         babies: [Baby]
         users: [User]
     }
@@ -73,6 +76,13 @@ const root = {
         })
 
         return newBaby
+    },
+    deleteBaby: async ({ id }) => {
+        await prisma.baby.delete({
+            where: {
+                id: id
+            }
+        })
     }
 }
 
