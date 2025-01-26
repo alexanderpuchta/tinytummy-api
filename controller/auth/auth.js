@@ -30,6 +30,10 @@ function startSession(id) {
 async function verifySession(token) {
     return new Promise((resolve, reject) => {
 
+        if (!token) {
+            return null
+        }
+        
         const splitted = token.split(" ")[1]
 
         jwt.verify(splitted, process.env.SESSION_SECRET, function(err, decoded) {
