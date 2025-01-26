@@ -55,15 +55,20 @@ const root = {
         const user = await auth.methods.verifySession(context.token)
         const cached = false // await redis.methods.get("babies")
 
+        if (!user) {
+            return new Error("invalid credentials")
+        }
+
         if (cached) {
             return cached
         } else {
 
-            const babies = await prisma.baby.findMany() // ({
-            //     where: {
-            //         parentId: user
-            //     }
-            // })
+            console.log(user)
+            const babies = await prisma.baby.findMany({
+                where: {
+                    parentId: user
+                }
+            })
             // await redis.methods.store("babies", babies)
             return babies
         }
@@ -119,8 +124,8 @@ const root = {
 
             return await prisma.baby.findFirst({
                 where: {
-                    name: name //,
-                    // parentId: user
+                    name: name,
+                    parentId: user
                 }
             })
         } else {
