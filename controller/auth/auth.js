@@ -1,7 +1,7 @@
-const hash = require("argon2")
+const argon = require("argon2")
 
 async function hashPassword(password) {
-    return await hash(password)
+    return await argon.hash(password)
 }
 
 
