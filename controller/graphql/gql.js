@@ -52,7 +52,7 @@ const schema = buildSchema(`
 const root = {
     babies: async (_, context) => {
         
-        console.log(user)
+        const user = await auth.methods.verifySession(context.token)
         const cached = false // await redis.methods.get("babies")
 
         if (cached) {
@@ -84,7 +84,13 @@ const root = {
             }
         }
     },
-    async users() {
+    users: async (_, context) => {
+        
+        const user = await auth.methods.verifySession(context.token)
+
+        if (!user) {
+            return new Error("invalid credentials")
+        }
         
         const cached = false // await redis.methods.get("users")
 
@@ -101,34 +107,42 @@ const root = {
         
         const user = await auth.methods.verifySession(context.token)
 
-        await prisma.baby.create({
-            data: {
-                name: name,
-                gender: gender,
-                birth: dateOfBirth,
-                parentId: user
-            }
-        })
+        if (user) {
+            await prisma.baby.create({
+                data: {
+                    name: name,
+                    gender: gender,
+                    birth: dateOfBirth,
+                    parentId: user
+                }
+            })
 
-        return await prisma.baby.findFirst({
-            where: {
-                name: name,
-                parentId: user
-            }
-        })
+            return await prisma.baby.findFirst({
+                where: {
+                    name: name,
+                    parentId: user
+                }
+            })
+        } else {
+            return new Error("invalid credentials")
+        }
     },
     deleteBaby: async ({ id }, context) => {
 
         const user = await auth.methods.verifySession(context.token)
 
-        await prisma.baby.delete({
-            where: {
-                id: id,
-                parentId: user
-            }
-        })
+        if (user) {
+            await prisma.baby.delete({
+                where: {
+                    id: id,
+                    parentId: user
+                }
+            })
 
-        return "okay"
+            return "okay"
+        } else {
+            return new Error("user not found")
+        }
     },
     registerUser: async ({ first, last, email, password, passwordCheck }) => {
 
@@ -144,7 +158,7 @@ const root = {
                 }
             })
         } else {
-            return null
+            return new Error("invalid passwords")
         }
     },
     removeUser: async ({ id, password, passwordCheck }) => {
@@ -170,7 +184,7 @@ const root = {
             }
         }
 
-        return null
+        return new Error("invalid credentials")
     }
 }
 
