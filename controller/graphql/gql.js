@@ -23,12 +23,16 @@ const schema = buildSchema(`
         first: String
         last: String
         email: String
+        password: String
     }
 
     type Mutation {
 
         createBaby(name: String!, dateOfBirth: String!, gender: String!): Baby!
         deleteBaby(id: Int!): String!
+
+        register(first: String!, last: String!, email: String!, password: String!, passwordCheck: String!): User
+        removeUser(id: Int!, password: String!, passwordCheck: String!): Status
     }
 
     type Query {
@@ -55,14 +59,14 @@ const root = {
     },
     login: async ({ email, password }) => {
 
-        const hashedPassword = await auth.methods.hashPassword(password)
-        const cleanPassword = await auth.methods.verifyPassword(hashedPassword, password)
+        const user = await prisma.user.findFirst({
+            where: {
+                email: email
+            }
+        })
 
-        return {
-            id: 0,
-            first: "FAKE",
-            last: cleanPassword,
-            email: hashedPassword
+        if (user && await auth.methods.verifyPassword(user.password, password)) {
+            return user
         }
     },
     async users() {
@@ -103,6 +107,48 @@ const root = {
         })
 
         return `${id}`
+    },
+    register: async ({ first, last, email, password, passwordCheck }) => {
+
+        const hash = await auth.methods.hashPassword(password, passwordCheck)
+
+        if (hash) {
+            await prisma.user.create({
+                data: {
+                    first: first,
+                    last: last,
+                    email: email,
+                    password: hash
+                }
+            })
+        } else {
+            return null
+        }
+    },
+    removeUser: async ({ id, password, passwordCheck }) => {
+
+        const hash = await auth.methods.hashPassword(password, passwordCheck)
+
+        const user = await prisma.user.findFirst({
+            where: {
+                id: id
+            }
+        })
+
+        if (user && password === passwordCheck) {
+            if (await auth.methods.verifyPassword(hash, password)) {
+
+                await prisma.user.delete({
+                    where: {
+                        id: id
+                    }
+                })
+
+                return "okay"
+            }
+        }
+
+        return null
     }
 }
 

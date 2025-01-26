@@ -21,8 +21,9 @@ model Baby {
 }
 
 model User {
-  id      Int    @id @default(autoincrement())
-  first   String
-  last    String
-  email   String @unique
+  id        Int    @id @default(autoincrement())
+  first     String
+  last      String
+  email     String @unique
+  password  String
 }

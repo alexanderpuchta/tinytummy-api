@@ -11,7 +11,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@prisma/client": "^6.1.0",
+    "@prisma/client": "^6.2.1",
     "argon2": "^0.41.1",
     "connect-redis": "^8.0.1",
     "dotenv": "^16.4.7",

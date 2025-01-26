@@ -1,7 +1,11 @@
 const argon = require("argon2")
 
-async function hashPassword(password) {
-    return await argon.hash(password)
+async function hashPassword(password, passwordCheck) {
+    if (password === passwordCheck) {
+        return await argon.hash(password)
+    } else {
+        return null
+    }    
 }
 
 async function verifyPassword(hash, password) {
