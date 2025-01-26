@@ -2,6 +2,7 @@ const { createHandler } = require("graphql-http/lib/use/express")
 const { buildSchema } = require("graphql")
 const { ruruHTML } = require("ruru/server")
 
+const auth = require("../auth/auth")
 const prisma = require("../db/prisma")
 // const redis = require("../cache/redis")
 
@@ -25,12 +26,15 @@ const schema = buildSchema(`
     }
 
     type Mutation {
+
         createBaby(name: String!, dateOfBirth: String!, gender: String!): Baby!
         deleteBaby(id: Int!): String!
     }
 
     type Query {
+
         babies: [Baby]
+        login(email: String!, password: String!): User
         users: [User]
     }
 `)
@@ -47,6 +51,14 @@ const root = {
             const babies = await prisma.baby.findMany()
             // await redis.methods.store("babies", babies)
             return babies
+        }
+    },
+    login: async ({ email, password }) => {
+        return {
+            id: 0,
+            first: "FAKE",
+            last: "ACCOUNT",
+            email: await auth.hash(password)
         }
     },
     async users() {
