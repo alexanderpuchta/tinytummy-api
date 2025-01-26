@@ -59,11 +59,11 @@ const root = {
             return cached
         } else {
 
-            const babies = await prisma.baby.findMany({
-                where: {
-                    parentId: user
-                }
-            })
+            const babies = await prisma.baby.findMany() // ({
+            //     where: {
+            //         parentId: user
+            //     }
+            // })
             // await redis.methods.store("babies", babies)
             return babies
         }
@@ -91,7 +91,7 @@ const root = {
         if (!user) {
             return new Error("invalid credentials")
         }
-        
+
         const cached = false // await redis.methods.get("users")
 
         if (cached) {
@@ -119,8 +119,8 @@ const root = {
 
             return await prisma.baby.findFirst({
                 where: {
-                    name: name,
-                    parentId: user
+                    name: name //,
+                    // parentId: user
                 }
             })
         } else {

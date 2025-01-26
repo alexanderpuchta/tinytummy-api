@@ -4,6 +4,7 @@ CREATE TABLE "Baby" (
     "name" TEXT NOT NULL,
     "birth" TEXT NOT NULL,
     "gender" TEXT NOT NULL,
+    "parentId" INTEGER NOT NULL,
 
     CONSTRAINT "Baby_pkey" PRIMARY KEY ("id")
 );
@@ -14,6 +15,7 @@ CREATE TABLE "User" (
     "first" TEXT NOT NULL,
     "last" TEXT NOT NULL,
     "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -23,3 +25,6 @@ CREATE UNIQUE INDEX "Baby_id_key" ON "Baby"("id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- AddForeignKey
+ALTER TABLE "Baby" ADD CONSTRAINT "Baby_parentId_fkey" FOREIGN KEY ("parentId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
