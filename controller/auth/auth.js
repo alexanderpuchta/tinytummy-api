@@ -7,6 +7,6 @@ async function hashPassword(password) {
 
 module.exports = {
     methods: {
-        hash: hashPassword
+        hashPassword: hashPassword
     }
 }
