@@ -14,16 +14,19 @@ datasource db {
 }
 
 model Baby {
-  id      Int    @id @unique @default(autoincrement())
-  name    String
-  birth   String
-  gender  String
+  id       Int    @id @unique @default(autoincrement())
+  name     String
+  birth    String
+  gender   String
+  parent   User   @relation(fields: [parentId], references: [id])
+  parentId Int
 }
 
 model User {
-  id        Int    @id @default(autoincrement())
-  first     String
-  last      String
-  email     String @unique
-  password  String
+  id       Int    @id @default(autoincrement())
+  first    String
+  last     String
+  email    String @unique
+  password String
+  babies   Baby[]
 }

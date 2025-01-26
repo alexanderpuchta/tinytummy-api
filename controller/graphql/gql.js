@@ -1,4 +1,3 @@
-const { createHandler } = require("graphql-http/lib/use/express")
 const { buildSchema } = require("graphql")
 const { ruruHTML } = require("ruru/server")
 
@@ -12,47 +11,59 @@ const schema = buildSchema(`
     }
     
     type Baby {
-        id: Int
-        name: String
-        birth: String
-        gender: String
+        id: Int!
+        name: String!
+        birth: String!
+        gender: String!
+    }
+
+    type Credentials {
+
+        firstName: String!
+        lastName: String!
+        token: String!
     }
 
     type User {
-        id: Int
-        first: String
-        last: String
-        email: String
-        password: String
+        id: Int!
+        first: String!
+        last: String!
+        email: String!
+        babies: [Baby]
     }
 
     type Mutation {
 
-        createBaby(name: String!, dateOfBirth: String!, gender: String!): Baby!
-        deleteBaby(id: Int!): String!
+        createBaby(name: String!, dateOfBirth: String!, gender: String!): Baby
+        deleteBaby(id: Int!): Status
 
-        register(first: String!, last: String!, email: String!, password: String!, passwordCheck: String!): User
+        registerUser(first: String!, last: String!, email: String!, password: String!, passwordCheck: String!): User
         removeUser(id: Int!, password: String!, passwordCheck: String!): Status
     }
 
     type Query {
 
         babies: [Baby]
-        login(email: String!, password: String!): User
+        login(email: String!, password: String!): Credentials
         users: [User]
     }
 `)
 
 const root = {
-    async babies() {
+    babies: async (_, context) => {
         
+        console.log(user)
         const cached = false // await redis.methods.get("babies")
 
         if (cached) {
             return cached
         } else {
 
-            const babies = await prisma.baby.findMany()
+            const babies = await prisma.baby.findMany({
+                where: {
+                    parentId: user
+                }
+            })
             // await redis.methods.store("babies", babies)
             return babies
         }
@@ -66,7 +77,11 @@ const root = {
         })
 
         if (user && await auth.methods.verifyPassword(user.password, password)) {
-            return user
+            return {
+                firstName: user.first,
+                lastName: user.last,
+                token: auth.methods.startSession(user.id)
+            }
         }
     },
     async users() {
@@ -82,33 +97,40 @@ const root = {
             return users
         }
     },
-    createBaby: async ({ name, dateOfBirth, gender }) => {
+    createBaby: async ({ name, dateOfBirth, gender }, context) => {
+        
+        const user = await auth.methods.verifySession(context.token)
 
         await prisma.baby.create({
             data: {
                 name: name,
                 gender: gender,
-                birth: dateOfBirth
+                birth: dateOfBirth,
+                parentId: user
             }
         })
 
         return await prisma.baby.findFirst({
             where: {
-                name: name
+                name: name,
+                parentId: user
             }
         })
     },
-    deleteBaby: async ({ id }) => {
+    deleteBaby: async ({ id }, context) => {
+
+        const user = await auth.methods.verifySession(context.token)
 
         await prisma.baby.delete({
             where: {
-                id: id
+                id: id,
+                parentId: user
             }
         })
 
-        return `${id}`
+        return "okay"
     },
-    register: async ({ first, last, email, password, passwordCheck }) => {
+    registerUser: async ({ first, last, email, password, passwordCheck }) => {
 
         const hash = await auth.methods.hashPassword(password, passwordCheck)
 
@@ -152,13 +174,9 @@ const root = {
     }
 }
 
-const handler = createHandler({
-    schema: schema,
-    rootValue: root
-})
-
 module.exports = {
-    handler: handler,
+    schema: schema,
+    rootValue: root,
     ide: ruruHTML({
         endpoint: "/graphql"
     })

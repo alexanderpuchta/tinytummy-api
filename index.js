@@ -1,14 +1,25 @@
 const dotenv = require("dotenv").config
+const { createHandler } = require("graphql-http/lib/use/express")
 const express = require("express")
 
 const gql = require("./controller/graphql/gql")
 
 const app = express()
 
-app.all(
-    "/graphql",
-    gql.handler
-)
+const handler = createHandler({
+    schema: gql.schema,
+    rootValue: gql.rootValue,
+    context: async (req, res) => {
+
+        const header = req.headers["authorization"]
+        
+        return {
+            token: header
+        }
+    }
+})
+
+app.all("/graphql", handler)
 
 app.get("/", (req, res) => {
     res.json({
