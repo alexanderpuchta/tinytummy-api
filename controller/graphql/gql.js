@@ -54,11 +54,15 @@ const root = {
         }
     },
     login: async ({ email, password }) => {
+
+        const hashedPassword = await auth.methods.hashPassword(password)
+        const cleanPassword = await auth.methods.verifyPassword(hashedPassword, password)
+
         return {
             id: 0,
             first: "FAKE",
-            last: "ACCOUNT",
-            email: await auth.methods.hashPassword(password)
+            last: cleanPassword,
+            email: hashedPassword
         }
     },
     async users() {
