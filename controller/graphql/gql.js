@@ -58,7 +58,7 @@ const root = {
             id: 0,
             first: "FAKE",
             last: "ACCOUNT",
-            email: await auth.hash(password)
+            email: await auth.methods.hash(password)
         }
     },
     async users() {
