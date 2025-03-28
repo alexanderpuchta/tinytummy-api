@@ -14,10 +14,10 @@ async function verifyPassword(hash, password) {
     return await argon.verify(hash, password)
 }
 
-function startSession(id) {
+function startSession(identifier) {
     
     const payload = {
-        id: id
+        identifier: identifier
     }
     const options = {
         expiresIn: '7d'
@@ -41,8 +41,8 @@ async function verifySession(token) {
             if (err) {
                 reject(new Error("not authorized"))
             }
-
-            resolve(decoded.id)
+            
+            resolve(decoded.identifier)
         })
     })
 }

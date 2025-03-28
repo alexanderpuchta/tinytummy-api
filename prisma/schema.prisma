@@ -13,20 +13,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Baby {
-  id       Int    @id @unique @default(autoincrement())
-  name     String
-  birth    String
-  gender   String
-  parent   User   @relation(fields: [parentId], references: [id])
-  parentId Int
+model User {
+  id         Int      @id @default(autoincrement()) @unique
+  firstName  String
+  lastName   String
+  password   String
+  email      String   @unique
+  partnerId  Int?     @unique
+  partner    User?    @relation("PartnerRelation", fields: [partnerId], references: [id])
+  partners   User[]   @relation("PartnerRelation")
+  children   UserBaby[]
 }
 
-model User {
-  id       Int    @id @default(autoincrement())
-  first    String
-  last     String
-  email    String @unique
-  password String
-  babies   Baby[]
+model Baby {
+  id           Int        @id @default(autoincrement())
+  name         String
+  dateOfBirth  DateTime
+  gender       String
+  nutrition    String?
+  parents      UserBaby[]
+}
+
+model UserBaby {
+  id       Int      @id @default(autoincrement())
+  userId   Int
+  babyId   Int
+
+  user     User     @relation(fields: [userId], references: [id])
+  baby     Baby     @relation(fields: [babyId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, babyId])
 }

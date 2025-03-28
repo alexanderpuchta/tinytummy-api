@@ -13,8 +13,9 @@ const schema = buildSchema(`
     type Baby {
         id: Int!
         name: String!
-        birth: String!
+        dateOfBirth: String!
         gender: String!
+        nutrition: String
     }
 
     type Credentials {
@@ -26,8 +27,8 @@ const schema = buildSchema(`
 
     type User {
         id: Int!
-        first: String!
-        last: String!
+        firstName: String!
+        lastName: String!
         email: String!
         babies: [Baby]
     }
@@ -63,10 +64,13 @@ const root = {
             return cached
         } else {
 
-            console.log(user)
             const babies = await prisma.baby.findMany({
                 where: {
-                    parentId: user
+                    parents: {
+                        some: {
+                            userId: user
+                        }
+                    }
                 }
             })
             // await redis.methods.store("babies", babies)
@@ -81,12 +85,16 @@ const root = {
             }
         })
 
+        console.log(user)
+
         if (user && await auth.methods.verifyPassword(user.password, password)) {
             return {
-                firstName: user.first,
-                lastName: user.last,
+                firstName: user.firstName,
+                lastName: user.lastName,
                 token: auth.methods.startSession(user.id)
             }
+        } else {
+            return new Error("Could not create session")
         }
     },
     users: async (_, context) => {
@@ -113,19 +121,36 @@ const root = {
         const user = await auth.methods.verifySession(context.token)
 
         if (user) {
-            await prisma.baby.create({
+            
+            const newBaby = await prisma.baby.create({
                 data: {
                     name: name,
                     gender: gender,
-                    birth: dateOfBirth,
-                    parentId: user
+                    dateOfBirth: new Date(dateOfBirth),
+                    parents: {
+                        create: [
+                            {
+                                user: {
+                                    connect: {
+                                        id: user
+                                    }
+                                }
+                            }
+                        ]
+                    }
                 }
             })
 
             return await prisma.baby.findFirst({
                 where: {
-                    name: name,
-                    parentId: user
+                    id: newBaby.id
+                },
+                include: {
+                    parents: {
+                        include: {
+                            user: true
+                        }
+                    }
                 }
             })
         } else {
@@ -137,14 +162,27 @@ const root = {
         const user = await auth.methods.verifySession(context.token)
 
         if (user) {
-            await prisma.baby.delete({
+            const babies = await prisma.baby.findMany({
                 where: {
-                    id: id,
-                    parentId: user
+                    parents: {
+                        some: {
+                            userId: user
+                        }
+                    }
                 }
             })
 
-            return "okay"
+            if (babies.some(baby => baby.id === id)) {
+                await prisma.baby.delete({
+                    where: {
+                        id: id
+                    }
+                })
+
+                return "okay"
+            } else {
+                return new Error("invalid input")
+            }
         } else {
             return new Error("user not found")
         }
@@ -156,10 +194,10 @@ const root = {
         if (hash) {
             await prisma.user.create({
                 data: {
-                    first: first,
-                    last: last,
-                    email: email,
-                    password: hash
+                    firstName: first,
+                    lastName: last,
+                    password: hash,
+                    email: email
                 }
             })
         } else {
