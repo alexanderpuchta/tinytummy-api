@@ -19,9 +19,7 @@ const schema = buildSchema(`
     }
 
     type Credentials {
-
-        firstName: String!
-        lastName: String!
+        refreshToken: String
         token: String!
     }
 
@@ -46,7 +44,7 @@ const schema = buildSchema(`
 
         babies: [Baby]
         login(email: String!, password: String!): Credentials
-        users: [User]
+        user: User
     }
 `)
 
@@ -89,19 +87,18 @@ const root = {
 
         if (user && await auth.methods.verifyPassword(user.password, password)) {
             return {
-                firstName: user.firstName,
-                lastName: user.lastName,
+                refreshToken: null,
                 token: auth.methods.startSession(user.id)
             }
         } else {
             return new Error("Could not create session")
         }
     },
-    users: async (_, context) => {
+    user: async (_, context) => {
         
-        const user = await auth.methods.verifySession(context.token)
+        const id = await auth.methods.verifySession(context.token)
 
-        if (!user) {
+        if (!id) {
             return new Error("invalid credentials")
         }
 
@@ -111,9 +108,13 @@ const root = {
             return cached
         } else {
 
-            const users = await prisma.user.findMany()
+            const user = await prisma.user.findFirst({
+                where: {
+                    id: id
+                }
+            })
             // await redis.methods.store("users", users)
-            return users
+            return user
         }
     },
     createBaby: async ({ name, dateOfBirth, gender }, context) => {
