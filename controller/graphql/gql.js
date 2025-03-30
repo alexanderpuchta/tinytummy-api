@@ -29,9 +29,12 @@ const schema = buildSchema(`
         lastName: String!
         email: String!
         babies: [Baby]
+        partners: [User]
     }
 
     type Mutation {
+
+        addPartner(email: String!): Status
 
         createBaby(name: String!, dateOfBirth: String!, gender: String!): Baby
         deleteBaby(id: Int!): Status
@@ -49,6 +52,42 @@ const schema = buildSchema(`
 `)
 
 const root = {
+    addPartner: async({ email }, context) => {
+
+        const user = await auth.methods.verifySession(context.token)
+        const partner = await prisma.user.findFirst({
+            where: {
+                email: email
+            }
+        })
+
+        if (!user) {
+            return new Error("not authorized")
+        }
+
+        if (!partner) {
+            return new Error("partner not found")
+        }
+
+        const result = await prisma.user.update({
+            where: {
+                id: user
+            },
+            data: {
+                partners: {
+                    connect: {
+                        id: partner.id
+                    }
+                }
+            }
+        })
+
+        if (result) {
+            return "okay"
+        } else {
+            return new Error("something went wrong.")
+        }
+    },
     babies: async (_, context) => {
         
         const user = await auth.methods.verifySession(context.token)
@@ -111,6 +150,9 @@ const root = {
             const user = await prisma.user.findFirst({
                 where: {
                     id: id
+                },
+                include: {
+                    partners: true
                 }
             })
             // await redis.methods.store("users", users)

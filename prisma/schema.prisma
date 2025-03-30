@@ -14,33 +14,87 @@ datasource db {
 }
 
 model User {
-  id         Int      @id @default(autoincrement()) @unique
-  firstName  String
-  lastName   String
-  password   String
-  email      String   @unique
-  partnerId  Int?     @unique
-  partner    User?    @relation("PartnerRelation", fields: [partnerId], references: [id])
-  partners   User[]   @relation("PartnerRelation")
-  children   UserBaby[]
+  id        Int        @id @unique @default(autoincrement())
+  firstName String
+  lastName  String
+  password  String
+  email     String     @unique
+  partnerId Int?       @unique
+  partner   User?      @relation("PartnerRelation", fields: [partnerId], references: [id])
+  partners  User[]     @relation("PartnerRelation")
+  children  UserBaby[]
+  Diaper    Diaper[]
+  Food      Food[]
+  Med       Med[]
+  Sleep     Sleep[]
 }
 
 model Baby {
-  id           Int        @id @default(autoincrement())
-  name         String
-  dateOfBirth  DateTime
-  gender       String
-  nutrition    String?
-  parents      UserBaby[]
+  id          Int        @id @default(autoincrement())
+  name        String
+  dateOfBirth DateTime
+  gender      String
+  nutrition   String?
+  parents     UserBaby[]
+  Diaper      Diaper[]
+  Food        Food[]
+  Med         Med[]
+  Sleep       Sleep[]
+}
+
+model Diaper {
+  id     Int      @id @default(autoincrement())
+  babyId Int
+  userId Int
+  type   String
+  time   DateTime @default(now())
+
+  baby Baby @relation(fields: [babyId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Food {
+  id       Int      @id @unique @default(autoincrement())
+  babyId   Int
+  userId   Int
+  foodName String
+  quantity String?
+  time     DateTime @default(now())
+
+  baby Baby @relation(fields: [babyId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Med {
+  id       Int      @id @default(autoincrement())
+  babyId   Int
+  userId   Int
+  medicine String
+  dosage   String?
+  time     DateTime @default(now())
+
+  baby Baby @relation(fields: [babyId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Sleep {
+  id        Int       @id @default(autoincrement())
+  babyId    Int
+  userId    Int
+  startTime DateTime
+  endTime   DateTime?
+
+  baby Baby @relation(fields: [babyId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserBaby {
-  id       Int      @id @default(autoincrement())
-  userId   Int
-  babyId   Int
+  id     Int @id @default(autoincrement())
+  userId Int
+  babyId Int
 
-  user     User     @relation(fields: [userId], references: [id])
-  baby     Baby     @relation(fields: [babyId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
+  baby Baby @relation(fields: [babyId], references: [id], onDelete: Cascade)
 
   @@unique([userId, babyId])
 }
