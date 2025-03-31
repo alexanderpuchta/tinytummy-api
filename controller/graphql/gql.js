@@ -177,22 +177,36 @@ const root = {
         const user = await auth.methods.verifySession(context.token)
 
         if (user) {
+
+            const account = await prisma.user.findUnique({
+                where: {
+                    id: user
+                },
+                include: {
+                    partners: true
+                }
+            })
             
+            const userConnections = account.partners.map(partner => ({
+                id: partner.id
+            }))
+            userConnections.push({
+                id: user
+            })
+
             const newBaby = await prisma.baby.create({
                 data: {
                     name: name,
                     gender: gender,
                     dateOfBirth: new Date(dateOfBirth),
                     parents: {
-                        create: [
-                            {
-                                user: {
-                                    connect: {
-                                        id: user
-                                    }
+                        create: userConnections.map(partner => ({
+                            user: {
+                                connect: {
+                                    id: partner.id
                                 }
                             }
-                        ]
+                        }))
                     }
                 }
             })
