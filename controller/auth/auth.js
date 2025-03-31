@@ -20,7 +20,7 @@ function startSession(identifier) {
         identifier: identifier
     }
     const options = {
-        expiresIn: '7d'
+        expiresIn: '1d'
     }
     const token = jwt.sign(payload, process.env.SESSION_SECRET, options)
 

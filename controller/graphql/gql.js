@@ -82,6 +82,19 @@ const root = {
             }
         })
 
+        await prisma.user.update({
+            where: {
+                id: partner.id
+            },
+            data: {
+                partners: {
+                    connect: {
+                        id: user
+                    }
+                }
+            }
+        })
+
         if (result) {
             return "okay"
         } else {
