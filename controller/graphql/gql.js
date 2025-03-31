@@ -16,6 +16,7 @@ const schema = buildSchema(`
         dateOfBirth: String!
         gender: String!
         nutrition: String
+        parents: [User]
     }
 
     type Credentials {
@@ -120,6 +121,11 @@ const root = {
                         some: {
                             userId: user
                         }
+                    }
+                },
+                include: {
+                    parents: {
+                        user: true
                     }
                 }
             })
