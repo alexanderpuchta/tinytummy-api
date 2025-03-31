@@ -23,10 +23,6 @@ model User {
   partner   User?      @relation("PartnerRelation", fields: [partnerId], references: [id])
   partners  User[]     @relation("PartnerRelation")
   children  UserBaby[]
-  Diaper    Diaper[]
-  Food      Food[]
-  Med       Med[]
-  Sleep     Sleep[]
 }
 
 model Baby {
@@ -45,47 +41,39 @@ model Baby {
 model Diaper {
   id     Int      @id @default(autoincrement())
   babyId Int
-  userId Int
   type   String
   time   DateTime @default(now())
 
   baby Baby @relation(fields: [babyId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Food {
   id       Int      @id @unique @default(autoincrement())
   babyId   Int
-  userId   Int
   foodName String
   quantity String?
   time     DateTime @default(now())
 
   baby Baby @relation(fields: [babyId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Med {
   id       Int      @id @default(autoincrement())
   babyId   Int
-  userId   Int
   medicine String
   dosage   String?
   time     DateTime @default(now())
 
   baby Baby @relation(fields: [babyId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Sleep {
   id        Int       @id @default(autoincrement())
   babyId    Int
-  userId    Int
   startTime DateTime
   endTime   DateTime?
 
   baby Baby @relation(fields: [babyId], references: [id], onDelete: Cascade)
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model UserBaby {

@@ -6,11 +6,13 @@ const prisma = require("../db/prisma")
 // const redis = require("../cache/redis")
 
 const schema = buildSchema(`
+    
     enum Status {
        okay
     }
     
     type Baby {
+
         id: Int!
         name: String!
         dateOfBirth: String!
@@ -20,11 +22,13 @@ const schema = buildSchema(`
     }
 
     type Credentials {
+
         refreshToken: String
         token: String!
     }
 
     type User {
+
         id: Int!
         firstName: String!
         lastName: String!
@@ -40,13 +44,12 @@ const schema = buildSchema(`
         createBaby(name: String!, dateOfBirth: String!, gender: String!): Baby
         deleteBaby(id: Int!): Status
 
-        registerUser(first: String!, last: String!, email: String!, password: String!, passwordCheck: String!): User
-        removeUser(id: Int!, password: String!, passwordCheck: String!): Status
+        createUser(first: String!, last: String!, email: String!, password: String!, passwordCheck: String!): User
+        deleteUser(id: Int!, password: String!, passwordCheck: String!): Status
     }
 
     type Query {
 
-        babies: [Baby]
         login(email: String!, password: String!): Credentials
         user: User
     }
@@ -102,37 +105,6 @@ const root = {
             return new Error("something went wrong.")
         }
     },
-    babies: async (_, context) => {
-        
-        const user = await auth.methods.verifySession(context.token)
-        const cached = false // await redis.methods.get("babies")
-
-        if (!user) {
-            return new Error("invalid credentials")
-        }
-
-        if (cached) {
-            return cached
-        } else {
-
-            const babies = await prisma.baby.findMany({
-                where: {
-                    parents: {
-                        some: {
-                            userId: user
-                        }
-                    }
-                },
-                include: {
-                    parents: {
-                        user: true
-                    }
-                }
-            })
-            // await redis.methods.store("babies", babies)
-            return babies
-        }
-    },
     login: async ({ email, password }) => {
 
         const user = await prisma.user.findFirst({
@@ -140,8 +112,6 @@ const root = {
                 email: email
             }
         })
-
-        console.log(user)
 
         if (user && await auth.methods.verifyPassword(user.password, password)) {
             return {
@@ -171,11 +141,23 @@ const root = {
                     id: id
                 },
                 include: {
-                    partners: true
+                    partners: true,
+                    children: {
+                        include: {
+                            baby: true
+                        }
+                    }
                 }
             })
-            // await redis.methods.store("users", users)
-            return user
+
+            return {
+                id: user.id,
+                email: user.email,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                partners: user.partners,
+                babies: user.children.map(children => children.baby)
+            }
         }
     },
     createBaby: async ({ name, dateOfBirth, gender }, context) => {
@@ -197,7 +179,7 @@ const root = {
                 id: partner.id
             }))
             userConnections.push({
-                id: user
+                id: account.id
             })
 
             const newBaby = await prisma.baby.create({
@@ -217,9 +199,32 @@ const root = {
                 }
             })
 
-            return await prisma.baby.findFirst({
+            const userId = account.id
+            const babyId = newBaby.id
+            await prisma.userBaby.upsert({
                 where: {
-                    id: newBaby.id
+                    userId_babyId: {
+                        userId, babyId
+                    }
+                },
+                update: {},
+                create: {
+                    user: {
+                        connect: {
+                            id: userId
+                        }
+                    },
+                    baby: {
+                        connect: {
+                            id: babyId
+                        }
+                    }
+                }
+            })
+
+            const baby = await prisma.baby.findFirst({
+                where: {
+                    id: babyId
                 },
                 include: {
                     parents: {
@@ -229,6 +234,15 @@ const root = {
                     }
                 }
             })
+
+            return {
+                id: baby.id,
+                name: baby.name,
+                dateOfBirth: baby.dateOfBirth,
+                gender: baby.gender,
+                nutrition: baby.nutrition,
+                parents: baby.parents.map(parent => parent.user)
+            }
         } else {
             return new Error("invalid credentials")
         }
@@ -263,7 +277,7 @@ const root = {
             return new Error("user not found")
         }
     },
-    registerUser: async ({ first, last, email, password, passwordCheck }) => {
+    createUser: async ({ first, last, email, password, passwordCheck }) => {
 
         const hash = await auth.methods.hashPassword(password, passwordCheck)
 
@@ -280,7 +294,7 @@ const root = {
             return new Error("invalid passwords")
         }
     },
-    removeUser: async ({ id, password, passwordCheck }) => {
+    deleteUser: async ({ id, password, passwordCheck }) => {
 
         const hash = await auth.methods.hashPassword(password, passwordCheck)
 
